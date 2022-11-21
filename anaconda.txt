@@ -1,0 +1,1251 @@
+Chit 1:
+
+>create database bank;
+>use bank;
+>create table customer(c_id int primary key, cname varchar(20), city varchar(20));
+>create table account(c_id int, acc_type varchar(20), amount int);
+
+>insert into customer values(1, "john", "nashik");
+>insert into account values(1, "current", 5000);
+
+1. select Cname, Acc_Type, Amount from Customer c, Account a where c.C_Id = a.C_id and Acc_Type = "Saving";
+
+2. select * from Customer natural join Account;
+   select * from Customer c left join Account a on c.C_Id = a.C_Id;
+   select * from Customer c right join Account a on c.C_Id = a.C_Id;
+
+3. select * from Customer where City = (select City from Customer where Cname = "Pooja");
+
+4. select * from Account where Amount < (select avg(Amount) from Account);
+
+5. select C_Id from Account where Amount = (select max(Amount) from Account);
+
+6. select Acc_Type, min(Amount) from Account group by Acc_Type;
+
+7. select Amount from Account where Amount > (select min(Amount) from Account where Acc_Type = "Saving");
+
+=================================================================================================================
+
+Chit 2:
+#create table for borrower and fine
+#insert values only in borrower
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+RNO INT;
+NOD INT;
+NOB BORROWER.NAMEOFBOOK%TYPE;
+AMOUNT INT;
+DOI DATE;
+
+BEGIN
+RNO := &RNO;
+NOB := &NOB;
+
+SELECT ISSUEDATE INTO DOI FROM BORROWER WHERE ROLL_NO = RNO AND NAMEOFBOOK = NOB;
+NOD := SYSDATE - DOI;
+
+IF (NOD > 30) THEN
+AMOUNT := 50 * NOD;
+UPDATE BORROWER SET STATUS = 'R' WHERE ROLL_NO = RNO;
+INSERT INTO FINE VALUES(RNO, SYSDATE, AMOUNT);
+ELSIF (NOD < 30 AND NOD >= 15) THEN
+AMOUNT := 5 * NOD;
+UPDATE BORROWER SET STATUS = 'R' WHERE ROLL_NO = RNO;
+INSERT INTO FINE VALUES(RNO, SYSDATE, AMOUNT);
+ELSE
+UPDATE BORROWER SET STATUS = 'R' WHERE ROLL_NO = RNO;
+DBMS_OUTPUT.PUT_LINE('NO FINE');
+END IF;
+
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+DBMS_OUTPUT.PUT_LINE('NO DATA AVAILABLE');
+END;
+
+=================================================================================================================
+
+
+Chit 3:
+#create table for stud
+#insert values in stud of roll and Att
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+RNO INT;
+ATT INT;
+
+BEGIN
+RNO := &RNO;
+SELECT ATTENDANCE INTO ATT FROM STUD WHERE ROLL = RNO;
+
+IF (ATT < 75) THEN
+UPDATE STUD SET STATUS = 'D' WHERE ROLL = RNO;
+DBMS_OUTPUT.PUT_LINE('TERM NOT GRANTED');
+ELSE
+UPDATE STUD SET STATUS = 'ND' WHERE ROLL = RNO;
+DBMS_OUTPUT.PUT_LINE('TERM GRANTED');
+END IF;
+
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+DBMS_OUTPUT.PUT_LINE('NO DATA AVAILABLE');
+END;
+
+=================================================================================================================
+
+Chit 4:
+
+>use database
+>db.createCollection('city');
+>db.city.insert({ city:"pune", type:"urban", state:"MH", population:5600000});
+
+1. chit4> var map = function(){emit (this.state, this.population)};
+   chit4> var reduce = function(k, v) {return Array.sum(v)};
+   chit4> db.city.mapReduce(map, reduce, {out : 'statewise'});
+   chit4> db.statewise.find()
+
+2. chit4> var map = function(){emit (this.city, this.population)};
+   chit4> var reduce = function(k, v) {return Array.sum(v)};
+   chit4> db.city.mapReduce(map, reduce, {out : 'citywise'});
+   chit4> db.citywise.find()
+
+3. chit4> var map = function(){emit (this.type, this.population)};
+   chit4> var reduce = function(k, v) {return Array.sum(v)};
+   chit4> db.city.mapReduce(map, reduce, {out : 'typewise'});
+   chit4> db.typewise.find()
+
+4. chit4> var map = function(){emit (this.city, 1)};
+   chit4> var reduce = function(k, v) {return Array.sum(v)};
+   chit4> db.city.mapReduce(map, reduce, {out : 'citywisecount'});
+   chit4> db.citywisecount.find()
+
+5. chit4> var map = function(){emit (this.state, 1)};
+   chit4> var reduce = function(k, v) {return Array.sum(v)};
+   chit4> db.city.mapReduce(map, reduce, {out : 'statewisecount'});
+   chit4> db.statewisecount.find()
+
+========================================================================================================
+
+Chit 5:
+#create employee_tab table with eid, ename, salary
+#create employe_tab_cursor with same ceid, cename, csalary
+
+#put this in worksheet
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+CEID INT;
+CENAME VARCHAR2(20);
+CESALARY INT;
+
+CURSOR C1 IS SELECT EID, ENAME, SALARY INTO CEID, CENAME, CESALARY FROM EMPLOYEE_TAB;
+
+BEGIN
+OPEN C1;
+
+LOOP
+FETCH C1 INTO CEID, CENAME, CESALARY;
+EXIT WHEN C1%NOTFOUND;
+IF C1%FOUND THEN
+INSERT INTO EMPLOYEE_TAB_CURSOR VALUES(CEID, CENAME, CESALARY);
+END IF;
+END LOOP;
+
+CLOSE C1;
+
+END;
+
+====================================================================================================
+
+Chit 6:
+
+#Create procedure with parameters ROLL_NO IN NUMBER , NAME IN VARCHAR2 , MARKS IN NUMBER
+
+create or replace NONEDITIONABLE PROCEDURE PROCEDURE_1 
+(
+  ROLL_NO IN NUMBER 
+, NAME IN VARCHAR2 
+, MARKS IN NUMBER 
+) AS 
+BEGIN
+IF (MARKS <= 1500 AND MARKS >= 990) THEN
+DBMS_OUTPUT.PUT_LINE('DISTINCTION');
+INSERT INTO RESULT VALUES(ROLL_NO, NAME, 'DISTINCTION');
+ELSIF (MARKS <= 989 AND MARKS >= 900) THEN
+DBMS_OUTPUT.PUT_LINE('FIRST CLASS');
+INSERT INTO RESULT VALUES(ROLL_NO, NAME, 'FIRST CLASS');
+ELSIF (MARKS <= 899 AND MARKS >= 825) THEN
+DBMS_OUTPUT.PUT_LINE('HIGHER SECOND CLASS');
+INSERT INTO RESULT VALUES(ROLL_NO, NAME, 'HIGHER SECOND CLASS');
+ELSE
+DBMS_OUTPUT.PUT_LINE('FAIL');
+INSERT INTO RESULT VALUES(ROLL_NO, NAME, 'FAIL');
+END IF;
+
+INSERT INTO STUD_MARKS VALUES(NAME, MARKS);
+END PROCEDURE_1;
+
+
+#Create function with parameters R IN NUMBER , N IN VARCHAR2 , M IN NUMBER
+
+create or replace NONEDITIONABLE FUNCTION FUNC_1 
+(
+  R IN NUMBER 
+, N IN VARCHAR2 
+, M IN NUMBER 
+) RETURN VARCHAR2 AS 
+BEGIN
+  PROCEDURE_1(R,N,M);
+  RETURN 'SUCCESSFULL';
+END FUNC_1;
+
+
+#write this in worksheet
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+NAME_1 VARCHAR2(20);
+ROLL_NO_1 NUMBER;
+MARKS_1 NUMBER;
+CLASS VARCHAR2(20);
+
+BEGIN
+ROLL_NO_1 := &ROLL_NO_1;
+NAME_1 := &NAME_1;
+MARKS_1 := &MARKS_1;
+CLASS := FUNC_1(ROLL_NO_1, NAME_1, MARKS_1);
+DBMS_OUTPUT.PUT_LINE(CLASS);
+
+END;
+
+====================================================================================================
+
+
+Chit 7:
+
+#create function with parameters ROLL_NO IN NUMBER , NAME IN VARCHAR2 , MARKS IN NUMBER
+
+create or replace NONEDITIONABLE FUNCTION FUNCTION1 
+(
+  ROLL_NO IN NUMBER 
+, NAME IN VARCHAR2 
+, MARKS IN NUMBER 
+) RETURN VARCHAR2 AS 
+BEGIN
+IF (MARKS <= 1500 AND MARKS >= 990) THEN
+DBMS_OUTPUT.PUT_LINE('DISTINCTION');
+INSERT INTO RESULT VALUES(ROLL_NO, NAME, 'DISTINCTION');
+ELSIF (MARKS <= 989 AND MARKS >= 900) THEN
+DBMS_OUTPUT.PUT_LINE('FIRST CLASS');
+INSERT INTO RESULT VALUES(ROLL_NO, NAME, 'FIRST CLASS');
+ELSIF (MARKS <= 899 AND MARKS >= 825) THEN
+DBMS_OUTPUT.PUT_LINE('HIGHER SECOND CLASS');
+INSERT INTO RESULT VALUES(ROLL_NO, NAME, 'HIGHER SECOND CLASS');
+ELSE
+DBMS_OUTPUT.PUT_LINE('FAIL');
+INSERT INTO RESULT VALUES(ROLL_NO, NAME, 'FAIL');
+END IF;
+
+INSERT INTO STUD_MARKS VALUES(NAME, MARKS);
+
+RETURN 'SUCCESSFULL';
+END FUNCTION1;
+
+
+#write this in worksheet
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+NAME_1 VARCHAR2(20);
+ROLL_NO_1 NUMBER;
+MARKS_1 NUMBER;
+CLASS VARCHAR2(20);
+
+BEGIN
+ROLL_NO_1 := &ROLL_NO_1;
+NAME_1 := &NAME_1;
+MARKS_1 := &MARKS_1;
+CLASS := FUNCTION1(ROLL_NO_1, NAME_1, MARKS_1);
+DBMS_OUTPUT.PUT_LINE(CLASS);
+
+END;
+
+
+====================================================================================================
+
+
+Chit 8:
+
+>use database
+>db.createCollection('Student');
+>db.Student.insert({rno: 1, name: "Swapnil", subject: "DBMS", class: "TE", fees: 10000, marks: 77});
+
+
+1. chit8> var map = function(){emit (this.class, 1)}
+   chit8> var reduce = function(k, v) {return Array.sum(v)}
+   chit8> db.Student.mapReduce(map, reduce, {out:'classwisestudents'})
+   chit8> db.classwisestudents.find()
+
+2. chit8> var map = function(){emit (this.class, this.fees)}
+   chit8> var reduce = function(k, v) {return Array.sum(v)}
+   chit8> db.Student.mapReduce(map, reduce, {out:'classwisefees'})
+   chit8> db.classwisefees.find()
+
+3. chit8> var map = function(){emit (this.subject, this.marks)}
+   chit8> var reduce = function(k, v) {return Array.sum(v)}
+   chit8> db.Student.mapReduce(map, reduce, {out:'subjectwisemarks'})
+   chit8> db.subjectwisemarks.find()
+
+4. chit8> var map = function(){emit (this.subject, 1)}
+   chit8> var reduce = function(k, v) {return Array.sum(v)}
+   chit8> db.Student.mapReduce(map, reduce, {out:'subjectwisestudents'})
+   chit8> db.subjectwisestudents.find()
+
+==============================================================================================
+
+Chit 9:
+
+>use database
+>db.createCollection('orderinfo');
+>db.orderinfo.insert({cust_id: 123, cust_name: "abc", status: "A", price: 250});
+
+1. db.orderinfo.aggregate([{$group:{_id:"$name", total_price:{$sum:"$price"}}}]).sort({total_price:1})
+
+2. db.orderinfo.aggregate([{$group:{_id:"$name"}}])
+
+3. db.orderinfo.find({status:'A'}, {_id:1, price:1})
+
+4. db.orderinfo.deleteMany({status:'A'})
+
+==============================================================================================
+
+Chit 10:
+
+#create database >use Chit10
+#create new class named Chit10
+
+import com.mongodb.*;
+
+import java.util.Scanner;
+
+public class Chit10 {
+    public static void main(String[] args) {
+        MongoClient client = new MongoClient("localhost", 27017);
+        DB db1 = client.getDB("chit10");
+
+        // Creating a collection
+        DBCollection col = db1.createCollection("Students", null);
+        System.out.println("Collection created");
+
+        // Inserting a document
+        BasicDBObject obj1 = new BasicDBObject();
+        obj1.append("Roll", 65);
+        obj1.append("Name", "Siddhesh");
+        col.save(obj1);
+        System.out.println("Document inserted");
+
+        // Displaying a document
+        System.out.println("Displaying the document");
+        DBCursor cur1 = col.find();
+        while(cur1.hasNext()) {
+            System.out.println(cur1.next());
+        }
+
+        // Removing a document
+        BasicDBObject obj2 = new BasicDBObject();
+        obj2.append("Roll", 1);
+        obj2.append("Name", "A");
+        col.save(obj2);
+
+        System.out.println("Before removing the document");
+        DBCursor cur2 = col.find();
+        while(cur2.hasNext()) {
+            System.out.println(cur2.next());
+        }
+
+        col.remove(obj2);
+
+        System.out.println("After removing the document");
+        DBCursor cur3 = col.find();
+        while(cur3.hasNext()) {
+            System.out.println(cur3.next());
+        }
+
+        client.close();
+    }
+}
+
+==============================================================================================
+
+Chit 11:
+#create library table with name_of_book and status -- DONT INSERT VALUES
+#create library audit table with date , name_of_book , oldstatus , newstatus , operation -- DONT INSERT VALUES
+
+
+CREATE OR REPLACE TRIGGER TRIGGER1 
+BEFORE DELETE OR INSERT OR UPDATE ON LIB_TAB
+REFERENCING OLD AS OLD NEW AS NEW
+FOR EACH ROW
+DECLARE
+TRIGGER1 CHAR;
+BEGIN
+IF UPDATING THEN
+DBMS_OUTPUT.PUT_LINE(:OLD.STATUS);
+INSERT INTO LIB_AUDIT VALUES(SYSDATE, :NEW.BOOK_NAME, :OLD.STATUS, :NEW.STATUS, 'UPDATE');
+ELSIF INSERTING THEN
+DBMS_OUTPUT.PUT_LINE(:NEW.STATUS);
+INSERT INTO LIB_AUDIT VALUES(SYSDATE, :NEW.BOOK_NAME, :OLD.STATUS, :NEW.STATUS, 'INSERT');
+ELSIF DELETING THEN
+DBMS_OUTPUT.PUT_LINE(:OLD.BOOK_NAME || 'DELETING');
+INSERT INTO LIB_AUDIT VALUES(SYSDATE, :OLD.BOOK_NAME, :OLD.STATUS, :NEW.STATUS, 'DELETE');
+END IF;
+END;
+
+
+==============================================================================================
+
+
+Chit 12:
+>create database bank;
+>use bank;
+
+create table account(acc_no int primary key, branch_name varchar(20) not null, balance int not null, check(balance >= 0));
+
+create table branch(branch_name varchar(20) not null, branch_city varchar(20) not null, assets int not null check(assets >= 0));
+
+create table customer(cust_name varchar(20) not null, cust_street int not null, cust_city varchar(20) not null);
+
+create table depositor(cust_name varchar(20) not null, acc_no int, foreign key (acc_no) references account(acc_no));
+
+create table loan(loan_no int primary key, branch_name varchar(20) not null, amount int not null, check(amount >= 0));
+
+create table borrower(cust_name varchar(20) not null, loan_no int, foreign key (loan_no) references loan(loan_no) on delete cascade);
+
+1. select distinct branch_name from loan;
+
+2. select loan_no from loan where branch_name = 'Akurdi' and amount > 12000;
+
+3. select cust_name, loan.loan_no, amount from loan inner join borrower on loan.loan_no = borrower.loan_no;
+
+4. select cust_name from loan l, borrower b where l.loan_no = b.loan_no and branch_name = 'Akurdi' order by cust_name;
+
+5. select cust_name from account a, depositor d where a.acc_no = d.acc_no union select cust_name from loan l, borrower b where l.loan_no = b.loan_no;
+
+6. select avg(balance) from account where branch_name = 'Akurdi';
+
+7. select branch_name, avg(balance) from account group by branch_name;
+
+8. select branch_name, count(*) from depositor d, account a where a.acc_no = d.acc_no group by branch_name;
+
+9. select branch_name, avg(balance) from account group by branch_name having avg(balance) > 12000;
+
+10. select count(*) from customer;
+
+11. delete from loan where amount between 1300 and 1500;
+
+
+==============================================================================================
+
+Chit 13:
+1. create table jobs(job_id int primary key, job_desc varchar(20));
+
+2. create table employee(employee_id int primary key, first_name varchar(20), last_name varchar(20), job_id int, salary int, 
+   foreign key (job_id) references jobs(job_id) on delete no action on update no action);
+
+#insert values
+
+Try some update and delete queries
+>update jobs set job_id = 2 where job_id=1;
+>delete from jobs where job_id=1;
+
+==============================================================================================
+
+
+Chit 14:
+
+>use database
+
+1. chit14> db.createCollection('Teachers')
+
+   chit14> db.createCollection('Department')
+
+   chit14> db.createCollection('Students')
+
+   chit14> db.Teachers.insertMany([{Tname:'T1', Dno:1, Experience:13, Salary:17000, Date_of_joining:new Date(2012-07-21)}, 
+           {Tname:'T2', Dno:2, Experience:17, Salary:9000, Date_of_joining:new Date(2009-02-15)}, 
+	     {Tname:'T3', Dno:1, Experience:8, Salary:21000, Date_of_joining:new Date(2014-11-29)}, 
+	     {Tname:'T4', Dno:2, Experience:19, Salary:7000, Date_of_joining:new Date(2010-04-19)}])
+
+   chit14> db.Department.insertMany([{Dno:1, Dname:'COMP'}, {Dno:2, Dname:'ENTC'}])
+
+   chit14> db.Students.insertMany([{Sname:'abc', Roll_no:1, Class:'FE'}, {Sname:'def', Roll_no:2, Class:'SE'}, 
+	     {Sname:'xyz', Roll_no:3, Class:'TE'}, {Sname:'ghi', Roll_no:4, Class:'BE'}, {Sname:'jkl', Roll_no:5, Class:'FE'}])
+
+2. db.Teachers.find({$and:[{Dno:2}, {Salary:{$gte:10000}}]})
+
+3. db.Students.find({$or:[{Roll_no:2}, {Sname:'xyz'}]})
+
+4. db.Students.update({Roll_no:5}, {$set:{Sname:'Sid'}})
+
+5. db.Students.deleteMany({Class:'FE'})
+
+6. db.Teachers.find({Experience:{$gt:10}})
+
+7. db.Students.createIndex({Roll_no:1})
+
+==============================================================================================
+
+Chit 15:
+1. use Institute
+
+2. db.createCollection('Student')
+
+3. db.Student.insertMany([{RollNo:1, Name:'Yuvraj', Age:16, Branch:'Computer', Address:{City:'Mumbai', State:'Maharashtra'}, Hobbies:['H1', 'H3']}, 
+   {RollNo:2, Name:'Aman', Age:14, Branch:'Computer', Address:{City:'Bangalore', State:'Karnataka'}, Hobbies:['H1', 'H4', 'H5']}, 
+   {RollNo:3, Name:'Amit', Age:12, Branch:'ENTC', Address:{City:'Nagar', State:'Maharashtra'}, Hobbies:['H2', 'H4']}, 
+   {RollNo:4, Name:'John', Age:19, Branch:'Civil', Address:{City:'Ahmedabad', State:'Gujarat'}, Hobbies:['H3', 'H5']}, 
+   {RollNo:5, Name:'Simon', Age:20, Branch:'Mech', Address:{City:'Delhi', State:'Delhi'}, Hobbies:['H2', 'H4', 'H5']}, 
+   {RollNo:6, Name:'Paul', Age:14, Branch:'ENTC', Address:{City:'Indore', State:'Madhya Pradesh'}, Hobbies:['H2', 'H3']}, 
+   {RollNo:7, Name:'Toby', Age:21, Branch:'Civil', Address:{City:'Panaji', State:'Goa'}, Hobbies:['H4', 'H5']}, 
+   {RollNo:8, Name:'Peter', Age:15, Branch:'Mech', Address:{City:'Guwahati', State:'Assam'}, Hobbies:['H2', 'H4']}, 
+   {RollNo:9, Name:'Sunil', Age:11, Branch:'Computer', Address:{City:'Pune', State:'Maharashtra'}, Hobbies:['H1', 'H5']}, 
+   {RollNo:10, Name:'Deepak', Age:22, Branch:'ENTC', Address:{City:'Mumbai', State:'Maharashtra'}, Hobbies:['H1', 'H3']}])
+
+4. db.Student.find()
+
+5. db.Student.find({Age:{$gt:15}})
+
+6. db.Student.find().sort({Name:1})
+
+7. db.Student.update({RollNo:3}, {$set:{Branch:'Computer'}})
+
+8. db.Student.deleteOne({RollNo:1})
+
+9. db.Student.find({Name:/^A/})
+
+10. db.Student.find().count()
+
+11. db.Student.find().limit(5)
+
+12. db.Student.find().skip(3)
+
+13. db.Student.find({Address:{City:'Pune', State:'Maharashtra'}})
+
+14. db.Student.distinct("Address.City")
+
+15. var map = function(){emit(this.Address.City, 1)}
+    var reduce = function(k, v) {return Array.sum(v)}
+    db.Student.mapReduce(map, reduce, {out:'citycount'})
+    db.citycount.find()
+
+16. db.Student.find({}, {Name:1})
+
+17. db.Student.find({}, {Name:1, Hobbies:1})
+
+18. db.Student.drop()
+
+==============================================================================================
+
+Chit 16:
+1. use department
+
+2. db.createCollection('teacher')
+   db.teacher.insertMany([{name:'A', department:'Computer', experience:13, salary:17000}, {name:'B', department:'ENTC', experience:11, salary:12000}, 
+   {name:'C', department:'Computer', experience:15, salary:18300}, {name:'D', department:'ENTC', experience:15, salary:22400}])
+
+3. db.teacher.aggregate([{$group:{_id:"$department", average_salary:{$avg:"$salary"}}}])
+
+4. db.teacher.aggregate([{$group:{_id:"$department", no_of_employees:{$sum:1}}}])
+
+5. db.teacher.aggregate([{$group:{_id:"$department", min_salary:{$min:"$salary"}}}])
+
+6. db.teacher.createIndex({name:1})
+   db.teacher.dropIndex({name:1})
+
+==============================================================================================
+
+Chit 17:
+
+>create database LIBRARY;
+>use LIBRARY;
+
+create table account(); on delete cascade in primary key usage table from book table 
+LIKE THIS --> create table borrower(cust_name varchar(20) not null, loan_no int, foreign key (loan_no) references loan(loan_no) on delete cascade);
+
+
+
+1. select book.book_id, title, publisher_name, author_name, branch_name, no_of_copies from book 
+   join book_authors on book.book_id = book_authors.book_id join book_copies on book.book_id = book_copies.book_id 
+   join library_branch on book_copies.branch_id = library_branch.branch_id;
+
+2. select title, branch_name, card_no, date_out, due_date from book_lending 
+   join book on book_lending.book_id = book.book_id join library_branch on book_lending.branch_id = library_branch.branch_id 
+   where date_out between '2017-01-01' and '2017-06-30';
+
+3. delete from book where title = 'Databases';
+
+4. select pub_year, count(*) as total_no_of_books from book group by pub_year order by pub_year;
+
+5. create view books as select title, sum(no_of_copies) as copies from book 
+   join book_copies on book.book_id = book_copies.book_id group by book.book_id;
+
+==============================================================================================
+
+
+Chit 18:
+
+>create database mnc;
+>use mnc;
+>create table employee(blah blah);
+
+1. select distinct address from employee;
+
+2. select max(salary), min(salary) from employee;
+
+3. select * from employee order by salary;
+
+4. select ename from employee where address = 'Nasik' or address = 'Pune';
+
+5. select ename from employee where commission is null;
+
+6. update employee set address = 'Nasik' where ename = 'Amit';
+
+7. select * from employee where ename like 'A%';
+
+8. select count(*) from employee where address = 'Mumbai';
+
+9. select address, count(*) from employee group by address;
+
+10. select distinct address from employee, project where address = addr;
+
+11. select address, min(salary) from employee group by address;
+
+12. select address, max(salary) from employee group by address having max(salary) > 26000;
+
+13. delete from employee where salary > 30000;
+
+==============================================================================================
+
+Chit 19:
+
+
+
+1. create table emp(eno int auto_increment primary key, ename varchar(20) not null, address varchar(20) default 'Nashik', joindate date);
+   alter table emp auto_increment = 101;
+
+2. alter table emp add post varchar(20);
+
+3. insert into emp(ename, address, salary, joindate, post) values('Amit', 'Pune', 25000, '2017-05-23', 'HR'), 
+   ('Sneha', 'Pune', 35000, '2018-11-17', 'Manager'), ('Savita', 'Nashik', 28000, '2019-05-21', 'Tech Head'), 
+   ('Pooja', 'Mummbai', 19000, '2020-01-27', 'PR Head'), ('Sagar', 'Mumbai', 25000, '2021-09-12', 'Marketing Head');
+
+   create index emp_name on emp(ename);
+
+4. insert into emp(ename, salary, joindate, post) values('Siddhesh', 21000, '2022-03-27', 'Head');
+
+5. create view emp_data as select ename, salary from emp;
+   select * from emp_data;
+
+==============================================================================================
+
+Chit 20:
+
+Indexing:
+1. db.createCollection('Student')
+
+2. db.Student.insertMany([{rollno:1, name:'navin', subject:'DMSA', marks:78}, {rollno:2, name:'anusha', subject:'OSD', marks:75}, 
+   {rollno:3, name:'ravi', subject:'TOC', marks:69}, {rollno:4, name:'veena', subject:'TOC', marks:70}, 
+   {rollno:5, name:'pravini', subject:'OSD', marks:80}, {rollno:6, name:'reena', subject:'DMSA', marks:50}, 
+   {rollno:7, name:'geeta', subject:'CN', marks:90}, {rollno:8, name:'akash', subject:'CN', marks:85}])
+
+3. db.Student.createIndex({rollno:1})
+
+4. db.Student.createIndex({rollno:1, name:1})
+
+5. db.Student.createIndex({name:1}, {unique:true})
+
+6. db.Student.getIndexes()
+
+7. db.Student.dropIndex('name_1')
+
+
+Aggregation:
+
+1. db.Student.aggregate([{$group:{_id:"$subject", max_marks:{$max:"$marks"}}}])
+
+2. db.Student.aggregate([{$group:{_id:"$subject", min_marks:{$min:"$marks"}}}])
+
+3. db.Student.aggregate([{$group:{_id:"$subject", total_marks:{$sum:"$marks"}}}])
+
+4. db.Student.aggregate([{$group:{_id:"$subject", average_marks:{$avg:"$marks"}}}])
+
+5. db.Student.aggregate([{$group:{_id:"$subject", rollno:{$first:"$rollno"}, name:{$first:"$name"}, 
+   subject:{$first:"$subject"}, marks:{$first:"$marks"}}}])
+
+6. db.Student.aggregate([{$group:{_id:"$subject", rollno:{$last:"$rollno"}, name:{$last:"$name"}, 
+   subject:{$last:"$subject"}, marks:{$last:"$marks"}}}])
+
+7. db.Student.aggregate([{$group:{_id:"$subject", count:{$sum:1}}}])
+
+8. db.Student.aggregate([{$group:{_id:"$subject", count:{$sum:1}}}])
+
+
+==============================================================================================
+
+Chit 21:
+#create database >use chit21
+#create new class named Chit21
+
+import com.mongodb.*;
+
+import java.util.Scanner;
+
+public class Chit21 {
+    public static void main(String[] args) {
+        int ch, i = 0;
+        String str;
+
+        MongoClient client = new MongoClient("localhost", 27017);
+        DB db1 = client.getDB("chit21");
+        DBCollection col = db1.createCollection("Students", null);
+
+        Scanner sc = new Scanner(System.in);
+
+        do {
+            System.out.println("1.Insert\n2.Display\n3.Update\n4.Delete\n5.Drop\n6.Exit");
+            System.out.println("Enter a choice:");
+
+            ch = Integer.parseInt(sc.nextLine());
+
+            switch(ch) {
+                case 1:
+                    System.out.println("Enter name:");
+                    str = sc.nextLine();
+                    BasicDBObject obj1 = new BasicDBObject().append("Name", str);
+                    col.save(obj1);
+                    System.out.println("Inserted");
+                    break;
+
+                case 2:
+                    DBCursor cur = col.find();
+                    while(cur.hasNext()) {
+                        System.out.println(cur.next());
+                    }
+                    break;
+
+                case 3:
+                    System.out.println("Enter name to be replaced:");
+                    str = sc.nextLine();
+                    BasicDBObject obj2 = new BasicDBObject().append("Name", str);
+                    System.out.println("Enter new name:");
+                    str = sc.nextLine();
+                    BasicDBObject obj3 = new BasicDBObject().append("Name", str);
+                    col.update(obj2, obj3);
+                    System.out.println("Updated");
+                    break;
+
+                case 4:
+                    System.out.println("Enter name:");
+                    str = sc.nextLine();
+                    BasicDBObject obj4 = new BasicDBObject().append("Name", str);
+                    col.remove(obj4);
+                    System.out.println("Deleted");
+                    break;
+
+                case 5:
+                    col.drop();
+                    System.out.println("Collection Dropped");
+                    break;
+
+                case 6:
+                    System.exit(0);
+            }
+
+            System.out.println("Enter 1 to continue or 0 to exit");
+            i = Integer.parseInt(sc.nextLine());
+        }while(i == 1);
+
+        client.close();
+    }
+}
+
+
+
+==============================================================================================
+
+Chit 22:
+#create database >use chit22
+#create new class named Chit22
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class Chit22 {
+    public static void main(String[] args) throws Exception{
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        Scanner sc = new Scanner(System.in);
+
+        String url = "jdbc:mysql://localhost:3306/chit22";
+        String uname = "root";
+        String pass = "2707";
+
+        Connection con = DriverManager.getConnection(url, uname, pass);
+
+        System.out.println("Connection established successfully");
+
+        Statement st = con.createStatement();
+        String query;
+
+        int ch, i = 0;
+
+        do {
+            System.out.println("1.DML Queries\n2.DQL Queries\n3.DDL Queries");
+            System.out.println("Enter a choice:");
+
+            ch = Integer.parseInt(sc.nextLine());
+
+            switch(ch) {
+                case 1:
+                    query = sc.nextLine();
+                    st.execute(query);
+                    System.out.println("DML Query executed successfully");
+                    break;
+
+                case 2:
+                    query = sc.nextLine();
+                    ResultSet rs = st.executeQuery(query);
+                    while(rs.next()) {
+                        System.out.println(rs.getInt(1) + "\t" + rs.getString(2));
+                    }
+                    System.out.println("DQL Query executed successfully");
+                    break;
+
+                case 3:
+                    query = sc.nextLine();
+                    st.executeUpdate(query);
+                    System.out.println("DDL Query executed successfully");
+                    break;
+            }
+
+            System.out.println("Enter 1 to continue or 0 to exit");
+            i = Integer.parseInt(sc.nextLine());
+        }while(i == 1);
+
+
+        con.close();
+    }
+}
+
+==============================================================================================
+
+Chit 23:
+
+>create database mnc;
+>use mnc;
+>create table physician(blah blah);
+>insert into physician values(blah blah);
+
+1. select p.p_name, city from patient p, visit v where date_of_visit = '2017-07-13' and p.p_name = v.p_name;
+
+2. select name, count(*) from physician p, visit v where p.reg_no = v.reg_no group by v.reg_no;
+   select date_of_visit, sum(fee) from visit group by date_of_visit;
+
+3. select v.p_name, street, city from patient p, visit v where p.p_name = v.p_name;
+
+4. create view visitors as select * from visit where date_of_visit between '2021-01-01' and '2022-12-31';
+   select * from visitors;
+
+5. create index patient_name on patient(p_name);
+
+==============================================================================================
+
+Chit 24:
+
+>use cinema
+
+>db.createCollection('movies')
+
+>db.movies.insertOne({name:'Movie1', type:'action', budget:1000000, producer:{name:'producer1', address:'Pune'}})
+
+1. db.movies.find({budget:{$gt:100000}}, {name:1})
+
+2. db.movies.find({"producer.address":'Pune'}, {"producer.name":1})
+
+3. db.movies.update({type:'action'}, {$set:{type:'horror'}})
+
+4. db.movies.find({"producer.name":'producer1'})
+
+5. db.movies.aggregate([{$group:{_id:'$name'}}])
+
+==============================================================================================
+
+Chit 25:
+
+>create database banking;
+>use bannking;
+>create table branch(blah blah);
+>insert into branch values(blah blah);
+
+1. select * from loan order by amount desc, loan_no;
+
+2. N/A
+
+3. select c_name, c_city, street from customer c join depositor d on c.c_no = d.c_no join borrower b on c.c_no = b.c_no 
+   join account a on d.acc_no = a.acc_no join loan l on b.loan_no = l.loan_no where l.amount > (3 * a.balance);
+
+
+
+==============================================================================================
+
+
+DBMS Viva
+
+
+Oral Questions and Answers (DBMS LAB)
+Questions & Answers- DBMS
+https://career.guru99.com/top-50-database-interview-questions/
+1) Define Database.
+A prearranged collection of figures known as data is called database.
+2) What is DBMS?
+Database Management Systems (DBMS) are applications designed especially which enable user
+interaction with other applications.
+3) What are the various kinds of interactions catered by DBMS?
+The various kind of interactions catered by DBMS are:
+ Data definition
+ Update
+ Retrieval
+ Administration
+4) Segregate database technology’s development.
+The development of database technology is divided into:
+ Structure or data model
+ Navigational model
+ SQL/ relational model
+5) Who proposed the relational model?
+Edgar F. Codd proposed the relational model in 1970.
+6) What are the features of Database language?
+A database language may also incorporate features like:
+DBMS-specific Configuration and management of storage engine
+Computations to modification of query results by computations, like summing, counting,
+averaging, grouping, sorting and cross-referencing Constraint enforcement Application
+Programming Interface
+7) What do database languages do?
+As special-purpose languages, they have:
+ Data definition language
+ Data manipulation language
+ Query language
+8) Define database model.
+A data model determining fundamentally how data can be stored, manipulated and organised and
+the structure of the database logically is called database model.
+Oral Questions and Answers (DBMS LAB)
+9) What is SQL?
+Structured Query Language (SQL) being ANSI standard language updates database and commands
+for accessing.
+10) Enlist the various relationships of database.
+The various relationships of database are:
+ One-to-one: Single table having drawn relationship with another table having similar kind
+of columns.
+ One-to-many: Two tables having primary and foreign key relation.
+ Many-to-many: Junction table having many tables related to many tables.
+11) Define Normalization.
+Organized data void of inconsistent dependency and redundancy within a database is called
+normalization.
+12) Enlist the advantages of normalizing database.
+Advantages of normalizing database are:
+ No duplicate entries
+ Saves storage space
+ Boasts the query performances.
+13) Define Denormalization.
+Boosting up database performance, adding of redundant data which in turn helps rid of complex
+data is called denormalization.
+14) Define DDL and DML.
+Managing properties and attributes of database is called Data Definition Language(DDL).
+Manipulating data in a database such as inserting, updating, deleting is defined as Data
+Manipulation Language. (DML)
+15) Enlist some commands of DDL.
+They are:
+CREATE:
+Create is used in the CREATE TABLE statement. Syntax is:
+CREATE TABLE [column name] ( [column definitions] ) [ table parameters]
+ALTER:
+It helps in modification of an existing object of database. Its syntax is:
+Oral Questions and Answers (DBMS LAB)
+ALTER objecttype objectname parameters.
+DROP:
+It destroys an existing database, index, table or view. Its syntax is:
+DROP objecttype objectname.
+16) Define Union All operator and Union.
+Full recordings of two tables is Union All operator.
+A distinct recording of two tables is Union.
+17) Define cursor.
+A database object which helps in manipulating data row by row representing a result set is called
+cursor.
+18) Enlist the cursor types.
+They are:
+ Dynamic: it reflects changes while scrolling.
+ Static: doesn’t reflect changes while scrolling and works on recording of snapshot.
+ Keyset: data modification without reflection of new data is seen.
+19) Enlist the types of cursor.
+They types of cursor are:
+ Implicit cursor: Declared automatically as soon as the execution of SQL takes place without
+the awareness of the user.
+ Explicit cursor: Defined by PL/ SQL which handles query in more than one row.
+20) Define sub-query.
+A query contained by a query is called Sub-query.
+21) Why is group-clause used?
+Group-clause uses aggregate values to be derived by collecting similar data.
+22) Compare Non-clustered and clustered index
+Both having B-tree structure, non-clustered index has data pointers enabling one table many nonclustered indexes while clustered index is distinct for every table.
+23) Define Aggregate functions.
+Functions which operate against a collection of values and returning single value is called
+aggregate functions
+Oral Questions and Answers (DBMS LAB)
+24) Define Scalar functions.
+Scalar function is depended on the argument given and returns sole value.
+25) What restrictions can you apply when you are creating views?
+Restrictions that are applied are:
+ Only the current database can have views.
+ You are not liable to change any computed value in any particular view.
+ Integrity constants decide the functionality of INSERT and DELETE.
+ Full-text index definitions cannot be applied.
+ Temporary views cannot be created.
+ Temporary tables cannot contain views.
+ No association with DEFAULT definitions.
+ Triggers such as INSTEAD OF is associated with views.
+26) Define “correlated subqueries”.
+A ‘correlated subquery’ is a sort of sub query but correlated subquery is reliant on another query
+for a value that is returned. In case of execution, the sub query is executed first and then the
+correlated query.
+27) Define Data Warehousing.
+Storage and access of data from the central location in order to take some strategic decision is
+called Data Warehousing. Enterprise management is used for managing the information whose
+framework is known as Data Warehousing.
+28) Define Join and enlist its types.
+Joins help in explaining the relation between different tables. They also enable you to select data
+with relation to data in another table.
+The various types are:
+ INNER JOINs: Blank rows are left in the middle while more than equal to two tables are
+joined.
+ OUTER JOINs: Divided into Left Outer Join and Right Outer Join. Blank rows are left at the
+specified side by joining tables in other side.
+Other joins are CROSS JOINs, NATURAL JOINs, EQUI JOIN and NON-EQUI JOIN.
+29) What do you mean by Index hunting?
+Indexes help in improving the speed as well as the query performance of database. The procedure
+of boosting the collection of indexes is named as Index hunting.
+
+
+-------------------------------------------------------------------------------------------
+
+
+
+Oral Questions and Answers (DBMS LAB)
+Questions & Answers- MySQL
+https://career.guru99.com/top-50-mysql-interview-questions-answers/
+https://www.javatpoint.com/mysql-interview-questions
+1. What is MySQL?
+MySQL is an open source DBMS which is built, supported and distributed by MySQL AB (now
+acquired by Oracle)
+2. What are the technical features of MySQL?
+MySQL database software is a client or server system which includes
+ Multithreaded SQL server supporting various client programs and libraries
+ Different backend
+ Wide range of application programming interfaces and
+ Administrative tools.
+3. Why MySQL is used?
+MySQL database server is reliable, fast and very easy to use. This software can be downloaded as
+freeware and can be downloaded from the internet.
+4. What are Heap tables?
+HEAP tables are present in memory and they are used for high speed storage on temporary
+basis.
+• BLOB or TEXT fields are not allowed
+• Only comparison operators can be used =, <,>, = >,=<
+• AUTO_INCREMENT is not supported by HEAP tables
+• Indexes should be NOT NULL
+5. What is the default port for MySQL Server?
+The default port for MySQL server is 3306.
+6. What are the advantages of MySQL when compared with Oracle?
+ MySQL is open source software which is available at any time and has no cost involved.
+ MySQL is portable
+ GUI with command prompt.
+ Administration is supported using MySQL Query Browser
+Oral Questions and Answers (DBMS LAB)
+7. Difference between CHAR and VARCHAR?
+Following are the differences between CHAR and VARCHAR:
+ CHAR and VARCHAR types differ in storage and retrieval
+ CHAR column length is fixed to the length that is declared while creating table. The length
+value ranges from 1 and 255
+ When CHAR values are stored then they are right padded using spaces to specific length.
+Trailing spaces are removed when CHAR values are retrieved.
+8. Give string types available for column?
+The string types are:
+ SET
+ BLOB
+ ENUM
+ CHAR
+ TEXT
+ VARCHAR
+9. How to get current MySQL version
+SELECT VERSION ();
+10. What are the drivers in MySQL?
+ PHP Driver
+ JDBC Driver
+ ODBC Driver
+ C WRAPPER
+ PYTHON Driver
+ PERL Driver
+ RUBY Driver
+ CAP11PHP Driver
+ Ado.net5.mxj
+11. What does a TIMESTAMP do on UPDATE CURRENT_TIMESTAMP data type?
+TIMESTAMP column is updated with Zero when the table is created. UPDATE
+CURRENT_TIMESTAMP modifier updates the timestamp field to current time whenever there is a
+change in other fields of the table.
+12. What is the difference between primary key and candidate key?
+Every row of a table is identified uniquely by primary key. There is only one primary key for a
+table.
+Primary Key is also a candidate key. By common convention, candidate key can be designated as
+primary and which can be used for any foreign key references.
+13. What, if a table has one column defined as TIMESTAMP?
+Timestamp field gets the current timestamp whenever the row gets altered.
+Oral Questions and Answers (DBMS LAB)
+14. What happens when the column is set to AUTO INCREMENT and if you reach maximum
+value in the table?
+It stops incrementing. Any further inserts are going to produce an error, since the key has been
+used already.
+15. How can we find out which auto increment was assigned on Last insert?
+LAST_INSERT_ID will return the last value assigned by Auto_increment and it is not required to
+specify the table name.
+16. How can you see all indexes defined for a table?
+Indexes are defined for the table by:
+SHOW INDEX FROM <tablename>;
+17. What do you mean by % and _ in the LIKE statement?
+% corresponds to 0 or more characters, _ is exactly one character in the LIKE statement.
+18. What is the difference between NOW() and CURRENT_DATE()?
+NOW() command is used to show current year, month, date with hours, minutes and seconds
+while CURRENT_DATE() shows the current year with month and date only.
+19. What is a trigger in MySQL?
+A trigger is a set of codes that executes in response to some events.
+20. How many Triggers are possible in MySQL?
+There are six Triggers allowed to use in MySQL database.
+1. Before Insert
+2. After Insert
+3. Before Update
+4. After Update
+5. Before Delete
+6. After Delete
+21. What is the difference between TRUNCATE and DELETE in MySQL?
+ The DELETE command is used to delete data from a table. It only deletes the rows of data from
+the table while, truncate is very dangerous command and should be used carefully because it
+deletes every row permanently from a table.
+
+-------------------------------------------------------------------------------------------
+
+
+
+Oral Questions and Answers (DBMS LAB)
+Questions & Answers- NoSQL
+https://intellipaat.com/interview-question/no-sql-interview-questions/
+1. Compare NoSQL & RDBMS
+Criteria NoSQL RDBMS
+Data format Does not follow any order Organized and structured
+Scalability Very Good Average
+Querying Limited as no Join Clause Using SQL
+Storage
+mechanism
+Key-Value Pair, document, column
+storage, etc.
+Data & relationship stored in
+different tables
+2. What is NoSQL?
+NoSQL encompasses a wide variety of different database technologies that were developed in
+response to a rise in the volume of data stored about users, objects and products. The frequency in
+which this data is accessed, and performance and processing needs. Relational databases, on the
+other hand, were not designed to cope with the scale and agility challenges that face modern
+applications, nor were they built to take advantage of the cheap storage and processing power
+available today.
+3. What are the features of NoSQL?
+When compared to relational databases, NoSQL databases are more scalable and provide superior
+performance, and their data model addresses several issues that the relational model is not
+designed to address:
+ Large volumes of structured, semi-structured, and unstructured data
+ Agile sprints, quick iteration, and frequent code pushes
+ Object-oriented programming that is easy to use and flexible
+ Efficient, scale-out architecture instead of expensive, monolithic architecture
+Questions & Answers- MongoDB
+http://www.guru99.com/mongodb-interview-questions.html
+1) Explain what is MongoDB?
+Mongo-DB is a document database which provides high performance, high availability and easy
+scalability.
+2) What is “Namespace” in MongoDB?
+MongoDB stores BSON (Binary Interchange and Structure Object Notation) objects in the
+collection. The concatenation of the collection name and database name is called a namespace.
+Oral Questions and Answers (DBMS LAB)
+3) What is sharding in MongoDB?
+The procedure of storing data records across multiple machines is referred as Sharding. It is a
+MongoDB approach to meet the demands of data growth. It is the horizontal partition of data in a
+database or search engine. Each partition is referred as shard or database shard.
+4) How can you see the connection used by Mongos?
+To see the connection used by Mongos use db_adminCommand (“connPoolStats”);
+5) Explain what is a replica set?
+A replica set is a group of mongo instances that host the same data set. In replica set, one node is
+primary, and another is secondary. From primary to the secondary node all data replicates.
+6) How replication works in MongoDB?
+Across multiple servers, the process of synchronizing data is known as replication. It provides
+redundancy and increase data availability with multiple copies of data on different database
+server. Replication helps in protecting the database from the loss of a single server.
+7) While creating Schema in MongoDB what are the points need to be taken in
+consideration?
+Points need to be taken in consideration are
+ Design your schema according to user requirements
+ Combine objects into one document if you use them together. Otherwise, separate them
+ Do joins while write, and not when it is on read
+ For most frequent use cases optimize your schema
+ Do complex aggregation in the schema
+8) What is the syntax to create a collection and to drop a collection in MongoDB?
+ Syntax to create collection in MongoDB is db.createCollection(name,options)
+ Syntax to drop collection in MongoDB is db.collection.drop()
+9) Explain what is the role of profiler in MongoDB?
+MongoDB database profiler shows performance characteristics of each operation against the
+database. You can find queries using the profiler that are slower than they should be.
+10) Explain can you move old files in the moveChunk directory?
+Yes, it is possible to move old files in the moveChunk directory, during normal shard balancing
+operations these files are made as backups and can be deleted once the operations are done.
+11) To do safe backups what is the feature in MongoDB that you can use?
+Journaling is the feature in MongoDB that you can use to do safe backups.
+Oral Questions and Answers (DBMS LAB)
+12) Mention what is Objecld composed of?
+Objectld is composed of
+ Timestamp
+ Client machine ID
+ Client process ID
+ 3 byte incremented counter
+13) Mention what is the command syntax for inserting a document?
+For inserting a document command syntax is database.collection.insert (document).
+14) Mention how you can inspect the source code of a function?
+To inspect a source code of a function, without any parentheses, the function must be invoked.
+15) What is the command syntax that tells you whether you are on the master server or
+not? And how many master does MongoDB allow?
+Command syntax Db.isMaster() will tell you whether you are on the master server or not.
+MongoDB allows only one master server, while couchDB allows multiple masters.
+16) Mention the command syntax that is used to view Mongo is using the link?
+The command syntax that is used to view mongo is using the link is
+db._adminCommand(“connPoolStats.”)
+17) Explain what are indexes in MongoDB?
+Indexes are special structures in MongoDB, which stores a small portion of the data set in an easy
+to traverse form. Ordered by the value of the field specified in the index, the index stores the value
+of a specific field or set of fields.
+18) Mention what is the basic syntax to use index in MongoDB?
+The basic syntax to use in MongoDB is >db.COLLECTION_NAME.ensureIndex ( {KEY:1} ). In here
+the key is the the name of the COLUMN (or KEY:VALUE pair) which is present in the documents.
+19) Explain what is GridFS in MongoDB?
+For storing and retrieving large files such as images, video files and audio files GridFS is used. By
+default, it uses two files fs.files and fs.chunks to store the file’s metadata and the chunks.
+20) What are alternatives to MongoDB?
+Cassandra, CouchDB, Redis, Riak, Hbase are a few good alternatives. 
+
